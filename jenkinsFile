@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                sh 'composer install'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'php bin/phpunit tests/PostsControllerTest.php'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'ssh -o StrictHostKeyChecking=no form-deploy@192.168.56.109 "cd form; \
+                git pull origin master; \
+                composer install --optimize-autoloader --no-dev; \
+                symfony console doctrine:migrations:migrate --force; \
+                symfony console cache:clear; \
+                symfony console cache:warmup --no-optional-warmers "' 
+            }
+        }
+    }
+}
